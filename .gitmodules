@@ -1,0 +1,3 @@
+[submodule "TicTacToe\\dependencies\\glfw"]
+	path = TicTacToe\\dependencies\\glfw
+	url = https://github.com/Xinixter/glfw.git
