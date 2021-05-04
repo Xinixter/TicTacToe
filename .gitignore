@@ -1,6 +1,8 @@
 # Binaries
 bin/
 bin-int/
+build/
+out/
 
 # Prerequisites
 *.d
@@ -32,7 +34,6 @@ bin-int/
 *.app
 
 # CMake
-out/
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles
@@ -51,6 +52,9 @@ _deps
 **.vcxproj
 **.vcxproj.filters
 **.vcxproj.user
+
+# VS-Code
+.vscode/
 
 # MISC
 **.bat
