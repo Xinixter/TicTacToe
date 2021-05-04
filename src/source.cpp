@@ -21,11 +21,9 @@ int main()
 		exit(EXIT_FAILURE);
 	}
 
-	while (!glfwWindowShouldClose(sampleWindow))
-	{
+	while (!glfwWindowShouldClose(sampleWindow)) {
 		glfwSwapBuffers(sampleWindow);
 		glfwPollEvents();
-		
 	}
 	
 	glfwTerminate();
