@@ -6,14 +6,12 @@ int main()
 {
 	std::cout << "Let's start!...";
 
-	GLFWwindow* sampleWindow;
-
 	if (!glfwInit()) {
 		fprintf(stderr, "Failed to initialize GLFW\n");
 		exit(EXIT_FAILURE);
 	}
 
-	sampleWindow = glfwCreateWindow(500, 500, "Sample", NULL, NULL);
+	GLFWwindow* sampleWindow = glfwCreateWindow(500, 500, "Sample", NULL, NULL);
 
 	if (!sampleWindow) {
 		fprintf(stderr, "Failed to create GLFW Winow\n");
@@ -21,7 +19,12 @@ int main()
 		exit(EXIT_FAILURE);
 	}
 
+	glfwMakeContextCurrent(sampleWindow);
+
 	while (!glfwWindowShouldClose(sampleWindow)) {
+
+		GLuint vertexArrayID;
+
 		glfwSwapBuffers(sampleWindow);
 		glfwPollEvents();
 	}

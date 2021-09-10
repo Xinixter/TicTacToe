@@ -1,3 +1,3 @@
 [submodule "dependencies/glfw"]
 	path = dependencies/glfw
-	url = https://github.com/Xinixter/glfw.git
+	url = https://github.com/thooriga/glfw.git
