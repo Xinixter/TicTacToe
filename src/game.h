@@ -11,10 +11,12 @@ public:
 	Game();
 	~Game();
 
-	int Start();
+	int Init();
 
 private:
 	GLFWwindow* m_Window;
+	const unsigned int m_Width = 1000;
+	const unsigned int m_Height = 900;
 
 };
 

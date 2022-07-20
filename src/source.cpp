@@ -4,7 +4,7 @@ int main()
 {
 	Game game {};
 
-	auto check = game.Start();
+	auto check = game.Init();
 
 	return 0;
 }
