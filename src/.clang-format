@@ -1,9 +1,10 @@
 ---
-AccessModifierOffset: '0'
+AccessModifierOffset: '-4'
 AlignAfterOpenBracket: AlwaysBreak
-AlignConsecutiveMacros: 'true'
-AlignConsecutiveAssignments: 'true'
-AlignConsecutiveDeclarations: 'true'
+AlignArrayOfStructures: Right
+AlignConsecutiveMacros: AcrossEmptyLines
+AlignConsecutiveAssignments: AcrossEmptyLines
+AlignConsecutiveDeclarations: AcrossEmptyLines
 AlignEscapedNewlines: DontAlign
 AlignOperands: 'true'
 AlignTrailingComments: 'true'
@@ -40,6 +41,7 @@ Cpp11BracedListStyle: 'false'
 DerivePointerAlignment: 'true'
 FixNamespaceComments: 'true'
 IncludeBlocks: Regroup
+IndentAccessModifiers: 'false'
 IndentCaseLabels: 'false'
 IndentPPDirectives: BeforeHash
 IndentWidth: '4'
