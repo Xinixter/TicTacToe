@@ -1,4 +1,10 @@
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+#include <iostream>
+
 #include "game.h"
+#include "shader.h"
 
 
 static void CursorPosCallback(GLFWwindow* window, double xPos, double yPos);
@@ -103,10 +109,15 @@ int Game::Init()
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
-	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		 0.5f, -0.5f, 0.0f,
-		 0.0f,  0.5f, 0.0f
+	float board[] = {
+		-(1.0f/3.0f),  1.0f, 0.0f,
+		-(1.0f/3.0f), -1.0f, 0.0f,
+		 (1.0f/3.0f),  1.0f, 0.0f,
+		 (1.0f/3.0f), -1.0f, 0.0f,
+		-1.0f, -(1.0f/3.0f), 0.0f,
+		 0.9f, -(1.0f/3.0f), 0.0f,
+		-1.0f,  (1.0f/3.0f), 0.0f,
+		 0.9f,  (1.0f/3.0f), 0.0f
 	};
 
 	unsigned int vao {};
@@ -117,7 +128,7 @@ int Game::Init()
 	glGenBuffers(1, &vbo);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(board), board, GL_STATIC_DRAW);
 
 
 	glVertexAttribPointer(
@@ -126,7 +137,6 @@ int Game::Init()
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);    // Unbinding buffer
 	glBindVertexArray(0);
-	// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // Wirefram polygon
 
 	while (!glfwWindowShouldClose(m_Window)) {
 		ProcessInput(m_Window);
@@ -136,7 +146,7 @@ int Game::Init()
 
 		glUseProgram(shaderProgram);
 		glBindVertexArray(vao);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawArrays(GL_LINES, 0, 8);
 
 		glfwSwapBuffers(m_Window);
 		glfwPollEvents();
