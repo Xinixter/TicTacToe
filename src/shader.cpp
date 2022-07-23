@@ -2,7 +2,6 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
-#include <string_view>
 
 #include "shader.h"
 
@@ -53,7 +52,7 @@ void Shader::LogError(unsigned int id, const std::string_view& name)
 	int  success {};
 	char logInfo[512];
 
-	if (name.data() != "Binary") {
+	if (name != "Binary") {
 		glGetShaderiv(id, GL_COMPILE_STATUS, &success);
 		if (!success) {
 			glGetShaderInfoLog(id, 512, NULL, logInfo);
@@ -69,4 +68,10 @@ void Shader::LogError(unsigned int id, const std::string_view& name)
 					  << logInfo << std::endl;
 		}
 	}
+}
+
+Shader& Shader::Use()
+{
+	glUseProgram(m_SID);
+	return *this;
 }

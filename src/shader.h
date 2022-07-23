@@ -1,6 +1,9 @@
 #ifndef SHADER_H
 #define SHADER_H
 
+#include <string_view>
+
+
 class Shader {
 public:
 	unsigned int m_SID;

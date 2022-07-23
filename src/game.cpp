@@ -58,21 +58,6 @@ int Game::Init()
 		}
 	)GLSL";
 
-	unsigned int vertexShader {};
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShader);
-
-	int  success {};
-	char logInfo[512];
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-
-	if (!success) {
-		glGetShaderInfoLog(vertexShader, 512, NULL, logInfo);
-		std::cout << "Error shader vertex compilation failed\n"
-				  << logInfo << '\n';
-	}
-
 	const char* fragmentShaderSource = R"GLSL(
 		#version 330 core
 		out vec4 fragColor;
@@ -82,32 +67,8 @@ int Game::Init()
 		}
 	)GLSL";
 
-	unsigned int fragmentShader {};
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(fragmentShader);
-
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-	if (!success) {
-		glGetShaderInfoLog(fragmentShader, 512, NULL, logInfo);
-		std::cout << "Error shader fragment compilation failed\n"
-				  << logInfo << '\n';
-	}
-
-	unsigned int shaderProgram {};
-	shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-	if (!success) {
-		glGetProgramInfoLog(shaderProgram, 512, NULL, logInfo);
-		std::cout << "Error link failed\n" << logInfo << '\n';
-	}
-
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
+	Shader shader {};
+	shader.Compile(vertexShaderSource,fragmentShaderSource);
 
 	float board[] = {
 		-(1.0f/3.0f),  1.0f, 0.0f,
@@ -120,14 +81,20 @@ int Game::Init()
 		 0.9f,  (1.0f/3.0f), 0.0f
 	};
 
-	unsigned int vao {};
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
+	float tempTriangle[] = {
+		-0.5f, -0.5f, 0.0f,
+		 0.5f, -0.5f, 0.0f,
+		 0.0f,  0.5f, 0.0f
+	};
 
-	unsigned int vbo {};
-	glGenBuffers(1, &vbo);
+	unsigned int vao[2] {};
+	glGenVertexArrays(2, vao);
+	glBindVertexArray(vao[1]);
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	unsigned int vbo[2] {};
+	glGenBuffers(2, vbo);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(board), board, GL_STATIC_DRAW);
 
 
@@ -144,8 +111,8 @@ int Game::Init()
 		glClearColor(0.102f, 0.102f, 0.102f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUseProgram(shaderProgram);
-		glBindVertexArray(vao);
+		shader.Use();
+		glBindVertexArray(vao[1]);
 		glDrawArrays(GL_LINES, 0, 8);
 
 		glfwSwapBuffers(m_Window);

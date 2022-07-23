@@ -60,3 +60,6 @@ _deps
 # MISC
 **.bat
 **.sh
+
+# OS specific
+.cache/
