@@ -2,8 +2,47 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include <filesystem>
+#include <fstream>
+#include <sstream>
 
 #include "shader.h"
+
+void Shader::Load(
+	const std::filesystem::path& vertexPath,
+	const std::filesystem::path& fragPath,
+	const std::filesystem::path& geoPath)
+{
+	std::stringstream fragSource {};
+	std::stringstream vertexSource {};
+	std::stringstream geoSource {};
+
+	try {
+		std::ifstream file {};
+		file.open(vertexPath);
+		vertexSource << file.rdbuf();
+		file.close();
+
+		file.open(fragPath);
+		fragSource << file.rdbuf();
+		file.close();
+
+		if (!geoPath.empty()) {
+			file.open(geoPath);
+			geoSource << file.rdbuf();
+			file.close();
+		}
+	}
+	catch (const std::ifstream::failure&) {
+		std::cout << "Error: Could not load shader file from source path"
+				  << std::endl;
+	}
+
+	Compile(
+		vertexSource.str().c_str(),
+		fragSource.str().c_str(),
+		!geoPath.empty() ? geoSource.str().c_str() : nullptr);
+}
 
 void Shader::Compile(
 	const char* vertexSource,

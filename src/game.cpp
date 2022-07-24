@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include <filesystem>
 
 #include "game.h"
 #include "shader.h"
@@ -49,26 +50,19 @@ int Game::Init()
 	glfwSetInputMode(m_Window, GLFW_STICKY_KEYS, 1);
 	glfwSetMouseButtonCallback(m_Window, MouseButtonCallback);
 
-	const char* vertexShaderSource = R"GLSL(
-		#version 330 core
-		layout (location = 0) in vec3 posA;
-		void main()
-		{
-			gl_Position = vec4(posA.x, posA.y, posA.z, 1.0);
-		}
-	)GLSL";
+	// const auto& vertexPath = std::filesystem::path("./assets/basic-vshader.vs").string();
+	// const char* vertexShaderSource = vertexPath.c_str();
 
-	const char* fragmentShaderSource = R"GLSL(
-		#version 330 core
-		out vec4 fragColor;
-		void main()
-		{
-			fragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-		}
-	)GLSL";
+	// const auto& fragPath1 = std::filesystem::path("./assets/frag-vshader-1.fs").string();
+	// const char* fragmentShaderSource = fragPath1.c_str();
 
-	Shader shader {};
-	shader.Compile(vertexShaderSource,fragmentShaderSource);
+	// const auto& fragPath2 = std::filesystem::path("./assets/frag-shader-2.fs").string();
+	// const char* fragShaderSource = fragPath2.c_str();
+
+	using TPath = std::filesystem::path;
+	Shader shader[2] {};
+	shader[0].Load(TPath("../src/assets/basic-vshader.vs"), TPath("../src/assets/frag-shader-1.fs"), TPath());
+	shader[1].Load(TPath("../src/assets/basic-vshader.vs"), TPath("../src/assets/frag-shader-2.fs"), TPath());
 
 	float board[] = {
 		-(1.0f/3.0f),  1.0f, 0.0f,
@@ -82,9 +76,10 @@ int Game::Init()
 	};
 
 	float tempTriangle[] = {
-		-0.5f, -0.5f, 0.0f,
-		 0.5f, -0.5f, 0.0f,
-		 0.0f,  0.5f, 0.0f
+		// vertices           // colors
+		-0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f,  0.0f,  0.0f,  1.0f,  0.0f,
+		 0.0f,  0.5f,  0.0f,  0.0f,  0.0f,  1.0f
 	};
 
 	unsigned int vao[2] {};
@@ -94,16 +89,30 @@ int Game::Init()
 	unsigned int vbo[2] {};
 	glGenBuffers(2, vbo);
 
+	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(board), board, GL_STATIC_DRAW);
-
-
 	glVertexAttribPointer(
 		0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
+	glBindVertexArray(vao[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(tempTriangle), tempTriangle, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(
+		0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(
+		1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);    // Unbinding buffer
 	glBindVertexArray(0);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	while (!glfwWindowShouldClose(m_Window)) {
 		ProcessInput(m_Window);
@@ -111,9 +120,18 @@ int Game::Init()
 		glClearColor(0.102f, 0.102f, 0.102f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		shader.Use();
-		glBindVertexArray(vao[1]);
+		shader[0].Use();
+		glBindVertexArray(vao[0]);
 		glDrawArrays(GL_LINES, 0, 8);
+
+		shader[1].Use();
+		float timeVal = glfwGetTime();
+		float alphaCycle = static_cast<float>(sin(timeVal) / 2.0f + 0.5f);
+		int vertexColourLocation = glGetUniformLocation(shader[1].m_SID, "alpha");
+		glUniform1f(vertexColourLocation, alphaCycle);
+
+		glBindVertexArray(vao[1]);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		glfwSwapBuffers(m_Window);
 		glfwPollEvents();

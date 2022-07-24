@@ -8,14 +8,15 @@ class Shader {
 public:
 	unsigned int m_SID;
 
-	void Compile(
-		const char* vertexSource,
-		const char* fragSource,
-		const char* geoSource = nullptr);
-	
+	void Load(
+		const std::filesystem::path& vertexPath,
+		const std::filesystem::path& fragPath,
+		const std::filesystem::path& geoPath);
+
 	Shader& Use();
 
 private:
+	void Compile(const char* v, const char* f, const char* g = nullptr);
 	void LogError(unsigned int id, const std::string_view& name);
 
 };

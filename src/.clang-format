@@ -28,6 +28,7 @@ BreakBeforeBinaryOperators: None
 BreakBeforeBraces: Custom
 BraceWrapping:
   AfterFunction: 'true'
+  BeforeCatch: 'true'
   BeforeElse: 'true'
   SplitEmptyFunction: 'false'
 BreakBeforeTernaryOperators: 'true'
