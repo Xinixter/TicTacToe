@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <filesystem>
+#include <cmath>
 
 #include "game.h"
 #include "shader.h"
@@ -61,8 +62,8 @@ int Game::Init()
 
 	using TPath = std::filesystem::path;
 	Shader shader[2] {};
-	shader[0].Load(TPath("../src/assets/basic-vshader.vs"), TPath("../src/assets/frag-shader-1.fs"), TPath());
-	shader[1].Load(TPath("../src/assets/basic-vshader.vs"), TPath("../src/assets/frag-shader-2.fs"), TPath());
+	shader[0].Load("../src/assets/basic-vshader.vs", "../src/assets/frag-shader-1.fs");
+	shader[1].Load("../src/assets/basic-vshader.vs", "../src/assets/frag-shader-2.fs");
 
 	float board[] = {
 		-(1.0f/3.0f),  1.0f, 0.0f,
@@ -76,12 +77,17 @@ int Game::Init()
 	};
 
 	float tempTriangle[] = {
-		// vertices           // colors
-		-0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,
-		 0.5f, -0.5f,  0.0f,  0.0f,  1.0f,  0.0f,
-		 0.0f,  0.5f,  0.0f,  0.0f,  0.0f,  1.0f
+		// vertices         // colors         // texture coords
+		 0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // 1.0f, 1.0f, // top right
+		 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 1.0f, 0.0f, // bottom right
+		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, // 0.0f, 0.0f, // bottom left
+		-0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f//, 0.0f, 1.0f  // top left
 	};
 
+	unsigned int indices[] = {
+		0, 1, 3,
+		1, 2, 3
+	};
 	unsigned int vao[2] {};
 	glGenVertexArrays(2, vao);
 	glBindVertexArray(vao[1]);
@@ -99,6 +105,11 @@ int Game::Init()
 	glBindVertexArray(vao[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(tempTriangle), tempTriangle, GL_STATIC_DRAW);
+
+	unsigned int ebo {};
+	glGenBuffers(1, &ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(
 		0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
@@ -126,12 +137,12 @@ int Game::Init()
 
 		shader[1].Use();
 		float timeVal = glfwGetTime();
-		float alphaCycle = static_cast<float>(sin(timeVal) / 2.0f + 0.5f);
+		float alphaCycle = static_cast<float>(std::sin(timeVal) / 2.0f + 0.5f);
 		int vertexColourLocation = glGetUniformLocation(shader[1].m_SID, "alpha");
 		glUniform1f(vertexColourLocation, alphaCycle);
 
 		glBindVertexArray(vao[1]);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(m_Window);
 		glfwPollEvents();

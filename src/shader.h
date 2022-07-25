@@ -2,6 +2,7 @@
 #define SHADER_H
 
 #include <string_view>
+#include <filesystem>
 
 
 class Shader {
@@ -9,9 +10,9 @@ public:
 	unsigned int m_SID;
 
 	void Load(
-		const std::filesystem::path& vertexPath,
-		const std::filesystem::path& fragPath,
-		const std::filesystem::path& geoPath);
+		const char* vertexPath,
+		const char* fragPath,
+		const char* geoPath = nullptr);
 
 	Shader& Use();
 
