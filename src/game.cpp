@@ -2,11 +2,11 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
-#include <filesystem>
 #include <cmath>
 
 #include "game.h"
 #include "shader.h"
+#include "stb_image.h"
 
 
 static void CursorPosCallback(GLFWwindow* window, double xPos, double yPos);
@@ -60,10 +60,12 @@ int Game::Init()
 	// const auto& fragPath2 = std::filesystem::path("./assets/frag-shader-2.fs").string();
 	// const char* fragShaderSource = fragPath2.c_str();
 
-	using TPath = std::filesystem::path;
 	Shader shader[2] {};
-	shader[0].Load("../src/assets/basic-vshader.vs", "../src/assets/frag-shader-1.fs");
-	shader[1].Load("../src/assets/basic-vshader.vs", "../src/assets/frag-shader-2.fs");
+	shader[0].Load("../src/assets/grid-vshader.vs",
+				   "../src/assets/grid-fshader-1.fs");
+
+	shader[1].Load("../src/assets/element-vshader.vs",
+				   "../src/assets/element-fshader-2.fs");
 
 	float board[] = {
 		-(1.0f/3.0f),  1.0f, 0.0f,
@@ -71,17 +73,17 @@ int Game::Init()
 		 (1.0f/3.0f),  1.0f, 0.0f,
 		 (1.0f/3.0f), -1.0f, 0.0f,
 		-1.0f, -(1.0f/3.0f), 0.0f,
-		 0.9f, -(1.0f/3.0f), 0.0f,
+		 1.0f, -(1.0f/3.0f), 0.0f,
 		-1.0f,  (1.0f/3.0f), 0.0f,
-		 0.9f,  (1.0f/3.0f), 0.0f
+		 1.0f,  (1.0f/3.0f), 0.0f
 	};
 
-	float tempTriangle[] = {
-		// vertices         // colors         // texture coords
-		 0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // 1.0f, 1.0f, // top right
-		 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 1.0f, 0.0f, // bottom right
-		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, // 0.0f, 0.0f, // bottom left
-		-0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f//, 0.0f, 1.0f  // top left
+	float xo[] = {
+		// vertices                       // colors         // texture coords
+		 (1.0f/3.0f),  (1.0f/3.0f), 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
+		 (1.0f/3.0f), -(1.0f/3.0f), 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
+		-(1.0f/3.0f), -(1.0f/3.0f), 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
+		-(1.0f/3.0f),  (1.0f/3.0f), 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f  // top left
 	};
 
 	unsigned int indices[] = {
@@ -104,26 +106,85 @@ int Game::Init()
 
 	glBindVertexArray(vao[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(tempTriangle), tempTriangle, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(xo), xo, GL_STATIC_DRAW);
 
 	unsigned int ebo {};
 	glGenBuffers(1, &ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
+	unsigned int elementTexture;
+	glGenTextures(1, &elementTexture);
+	glBindTexture(GL_TEXTURE_2D, elementTexture);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	int texWidth {};
+	int texHeight {};
+	int nrChannels {};
+
+	stbi_set_flip_vertically_on_load(true);
+
+	unsigned char* xData =
+		stbi_load("../src/assets/x-alt.png", &texWidth, &texHeight, &nrChannels, 0);
+	// unsigned char* oData = stbi_load("../src/assets/o.png", &texWidth, &texHeight, &nrChannels, 0);
+	
+	if (xData) {
+		glTexImage2D(
+			GL_TEXTURE_2D,
+			0,
+			GL_RGBA,
+			texWidth,
+			texHeight,
+			0,
+			GL_RGBA,
+			GL_UNSIGNED_BYTE,
+			xData);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else {
+		std::cout << "Failed to Load the texture!" << std::endl;
+	}
+
+	// glBindTexture(GL_TEXTURE_2D, elementTexture[1]);
+	// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texWidth[1], texHeight[1], 0, GL_RGB, GL_UNSIGNED_BYTE, oData);
+	// glGenerateMipmap(GL_TEXTURE_2D);
+
+	stbi_image_free(xData);
+
 	glVertexAttribPointer(
-		0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+		0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
 	glVertexAttribPointer(
-		1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+		1,
+		3,
+		GL_FLOAT,
+		GL_FALSE,
+		8 * sizeof(float),
+		(void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
+
+	glVertexAttribPointer(
+		2,
+		3,
+		GL_FLOAT,
+		GL_FALSE,
+		8 * sizeof(float),
+		(void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);    // Unbinding buffer
 	glBindVertexArray(0);
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	double xPos {};
+	double yPos {};
 
 	while (!glfwWindowShouldClose(m_Window)) {
 		ProcessInput(m_Window);
@@ -135,17 +196,18 @@ int Game::Init()
 		glBindVertexArray(vao[0]);
 		glDrawArrays(GL_LINES, 0, 8);
 
-		shader[1].Use();
-		float timeVal = glfwGetTime();
-		float alphaCycle = static_cast<float>(std::sin(timeVal) / 2.0f + 0.5f);
-		int vertexColourLocation = glGetUniformLocation(shader[1].m_SID, "alpha");
-		glUniform1f(vertexColourLocation, alphaCycle);
+		glfwPollEvents();
+		glfwGetCursorPos(m_Window, &xPos, &yPos);
 
-		glBindVertexArray(vao[1]);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		if (glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_LEFT) and
+			xPos >= 300 and xPos <= 600 and yPos >= 300 and yPos <= 600) {
+			shader[1].Use();
+			glBindTexture(GL_TEXTURE_2D, elementTexture);
+			glBindVertexArray(vao[1]);
+			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		}
 
 		glfwSwapBuffers(m_Window);
-		glfwPollEvents();
 	}
 
 	return 0;

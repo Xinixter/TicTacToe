@@ -20,8 +20,10 @@ public:
 
 private:
 	GLFWwindow* m_Window;
-	const unsigned int m_Width = 1000;
+	const unsigned int m_Width = 900;
 	const unsigned int m_Height = 900;
+
+	bool player1Turn {};
 
 };
 
