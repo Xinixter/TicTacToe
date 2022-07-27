@@ -14,7 +14,8 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 static void FrameBufferSizeCallback(GLFWwindow* window, int width, int height);
 static void ProcessInput(GLFWwindow* window);
 
-Game::Game() : m_Window { nullptr }
+Game::Game() :
+	m_Board {}, m_Window { nullptr }, m_CurrentState { GAME_INPROGRESS }, m_Player1Turn { true }
 {
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -196,21 +197,101 @@ int Game::Init()
 		glBindVertexArray(vao[0]);
 		glDrawArrays(GL_LINES, 0, 8);
 
-		glfwPollEvents();
-		glfwGetCursorPos(m_Window, &xPos, &yPos);
+		// shader[1].Use();
+		// glBindTexture(GL_TEXTURE_2D, elementTexture);
+		// glBindVertexArray(vao[1]);
+		// glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-		if (glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_LEFT) and
-			xPos >= 300 and xPos <= 600 and yPos >= 300 and yPos <= 600) {
-			shader[1].Use();
-			glBindTexture(GL_TEXTURE_2D, elementTexture);
-			glBindVertexArray(vao[1]);
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		if (m_CurrentState == GAME_INPROGRESS) {
+		}
+		glfwPollEvents();
+
+		// std::cout << m_CurrentState << std::endl;
+		if (glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_LEFT)) {
+			LogBoard();
+			glfwGetCursorPos(m_Window, &xPos, &yPos);
+			UpdateGameState(xPos, yPos);
+			if (m_CurrentState == GAME_OVER) {
+				std::cout << "Player" << m_Player1Turn << " won" << std::endl;
+			}
 		}
 
 		glfwSwapBuffers(m_Window);
 	}
 
 	return 0;
+}
+
+void Game::UpdateGameState(u32 x, u32 y)
+{
+	x /= 300;
+	y /= 300;
+
+	if (m_Board[y][x] == 0) {
+		if (m_Player1Turn) {
+			m_Board[y][x] = 1;
+			m_Player1Turn = false;
+		}
+		else {
+			m_Board[y][x] = 2;
+			m_Player1Turn = true;
+		}
+		LogBoard();
+	}
+
+	IsOver();
+}
+
+bool Game::IsOver()
+{
+	u32 sum {};
+
+	for (u32 i = 0; i < 3; ++i) {
+		for (u32 j = 0; j < 3; ++j) {
+			sum += m_Board[i][j] + m_Board[i][j + 1] + m_Board[i][j + 2];
+
+			if (m_Board[i][j] == 0 or m_Board[j][i] == 0) {
+				continue;
+			}
+
+			if (m_Board[i][j] == m_Board[i][j + 1] and m_Board[i][j] == m_Board[i][j + 2]) {
+				std::cout << i << j << '\n';
+				m_CurrentState = GAME_OVER;
+				return true;
+			}
+			if (m_Board[j][i] == m_Board[j + 1][i] and m_Board[i][j] == m_Board[j + 2][i]) {
+				std::cout << j << i << '\n';
+				m_CurrentState = GAME_OVER;
+				return true;
+			}
+		}
+	}
+
+	if (sum == 13) {
+		m_CurrentState = GAME_OVER;
+		return true;
+	}
+
+	if (m_Board[0][0] != 0 and m_Board[0][0] == m_Board[1][1] and m_Board[0][0] == m_Board[2][2]) {
+		m_CurrentState = GAME_OVER;
+		return true;
+	}
+	if (m_Board[2][0] != 0 and m_Board[2][0] == m_Board[1][1] and m_Board[2][0] == m_Board[0][2]) {
+		m_CurrentState = GAME_OVER;
+		return true;
+	}
+
+	return false;
+}
+
+void Game::LogBoard()
+{
+	for (u32 i = 0; i < 3; ++i) {
+		for (u32 j = 0; j < 3; ++j) {
+			std::cout << m_Board[i][j];
+		}
+		std::cout << std::endl;
+	}
 }
 
 static void ProcessInput(GLFWwindow* window)
