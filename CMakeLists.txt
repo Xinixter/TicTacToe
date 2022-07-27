@@ -66,7 +66,7 @@ add_subdirectory(
 )
 
 if( MSVC )
-    SET( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ENTRY:mainCRTStartup" )
+	SET( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ENTRY:mainCRTStartup" )
 	set_property( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME} )
 endif()
 
@@ -75,6 +75,10 @@ add_executable(${PROJECT_NAME}
 	src/game.cpp
 	src/shader.cpp
 	src/stb_image.cpp
+)
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+	dependencies/include/
 )
 
 target_link_libraries(${PROJECT_NAME}

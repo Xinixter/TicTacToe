@@ -1,12 +1,12 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <stb_image.h>
 
 #include <iostream>
 #include <cmath>
 
 #include "game.h"
 #include "shader.h"
-#include "stb_image.h"
 
 
 static void CursorPosCallback(GLFWwindow* window, double xPos, double yPos);
@@ -15,7 +15,10 @@ static void FrameBufferSizeCallback(GLFWwindow* window, int width, int height);
 static void ProcessInput(GLFWwindow* window);
 
 Game::Game() :
-	m_Board {}, m_Window { nullptr }, m_CurrentState { GAME_INPROGRESS }, m_Player1Turn { true }
+	m_Board {},
+	m_Window { nullptr },
+	m_CurrentState { GAME_INPROGRESS },
+	m_Player1Turn { true }
 {
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -52,15 +55,6 @@ int Game::Init()
 	glfwSetInputMode(m_Window, GLFW_STICKY_KEYS, 1);
 	glfwSetMouseButtonCallback(m_Window, MouseButtonCallback);
 
-	// const auto& vertexPath = std::filesystem::path("./assets/basic-vshader.vs").string();
-	// const char* vertexShaderSource = vertexPath.c_str();
-
-	// const auto& fragPath1 = std::filesystem::path("./assets/frag-vshader-1.fs").string();
-	// const char* fragmentShaderSource = fragPath1.c_str();
-
-	// const auto& fragPath2 = std::filesystem::path("./assets/frag-shader-2.fs").string();
-	// const char* fragShaderSource = fragPath2.c_str();
-
 	Shader shader[2] {};
 	shader[0].Load("../src/assets/grid-vshader.vs",
 				   "../src/assets/grid-fshader-1.fs");
@@ -81,10 +75,10 @@ int Game::Init()
 
 	float xo[] = {
 		// vertices                       // colors         // texture coords
-		 (1.0f/3.0f),  (1.0f/3.0f), 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
-		 (1.0f/3.0f), -(1.0f/3.0f), 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
-		-(1.0f/3.0f), -(1.0f/3.0f), 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-		-(1.0f/3.0f),  (1.0f/3.0f), 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f  // top left
+		 (1.0f/3.0f),  (1.0f/3.0f), 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
+		 (1.0f/3.0f), -(1.0f/3.0f), 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
+		-(1.0f/3.0f), -(1.0f/3.0f), 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
+		-(1.0f/3.0f),  (1.0f/3.0f), 1.0f, 0.0f, 1.0f, 0.0f, 1.0f  // top left
 	};
 
 	unsigned int indices[] = {
@@ -114,9 +108,9 @@ int Game::Init()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	unsigned int elementTexture;
-	glGenTextures(1, &elementTexture);
-	glBindTexture(GL_TEXTURE_2D, elementTexture);
+	unsigned int elementTexture[2];
+	glGenTextures(2, elementTexture);
+	glBindTexture(GL_TEXTURE_2D, elementTexture[0]);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -130,9 +124,8 @@ int Game::Init()
 	stbi_set_flip_vertically_on_load(true);
 
 	unsigned char* xData =
-		stbi_load("../src/assets/x-alt.png", &texWidth, &texHeight, &nrChannels, 0);
-	// unsigned char* oData = stbi_load("../src/assets/o.png", &texWidth, &texHeight, &nrChannels, 0);
-	
+		stbi_load("../src/assets/x.png", &texWidth, &texHeight, &nrChannels, 0);
+
 	if (xData) {
 		glTexImage2D(
 			GL_TEXTURE_2D,
@@ -147,17 +140,38 @@ int Game::Init()
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	else {
-		std::cout << "Failed to Load the texture!" << std::endl;
+		std::cout << "Failed to load the texture!" << std::endl;
 	}
-
-	// glBindTexture(GL_TEXTURE_2D, elementTexture[1]);
-	// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texWidth[1], texHeight[1], 0, GL_RGB, GL_UNSIGNED_BYTE, oData);
-	// glGenerateMipmap(GL_TEXTURE_2D);
 
 	stbi_image_free(xData);
 
+	glBindTexture(GL_TEXTURE_2D, elementTexture[1]);
+
+	unsigned char* oData =
+		stbi_load("../src/assets/o.png", &texWidth, &texHeight, &nrChannels, 0);
+	
+	if (oData) {
+		glTexImage2D(
+			GL_TEXTURE_2D,
+			0,
+			GL_RGBA,
+			texWidth,
+			texHeight,
+			0,
+			GL_RGBA,
+			GL_UNSIGNED_BYTE,
+			oData
+		);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else {
+		std::cout << "Failed to load the texture!" << std::endl;
+	}
+
+	stbi_image_free(oData);
+
 	glVertexAttribPointer(
-		0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		0, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
 	glVertexAttribPointer(
@@ -165,17 +179,17 @@ int Game::Init()
 		3,
 		GL_FLOAT,
 		GL_FALSE,
-		8 * sizeof(float),
-		(void*)(3 * sizeof(float)));
+		7 * sizeof(float),
+		(void*)(2 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
 	glVertexAttribPointer(
 		2,
-		3,
+		2,
 		GL_FLOAT,
 		GL_FALSE,
-		8 * sizeof(float),
-		(void*)(6 * sizeof(float)));
+		7 * sizeof(float),
+		(void*)(5 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);    // Unbinding buffer
@@ -197,22 +211,31 @@ int Game::Init()
 		glBindVertexArray(vao[0]);
 		glDrawArrays(GL_LINES, 0, 8);
 
-		// shader[1].Use();
-		// glBindTexture(GL_TEXTURE_2D, elementTexture);
-		// glBindVertexArray(vao[1]);
-		// glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		shader[1].Use();
 
-		if (m_CurrentState == GAME_INPROGRESS) {
+		for (u32 i = 0; i < 3; ++i) {
+			for (u32 j = 0; j < 3; ++j) {
+				if (m_Board[i][j] == 0) {
+					continue;
+				}
+
+				glUniform1f(glGetUniformLocation(shader[1].m_SID, "deltaX"), static_cast<float>(j));
+				glUniform1f(glGetUniformLocation(shader[1].m_SID, "deltaY"), static_cast<float>(i));
+
+				glBindTexture(GL_TEXTURE_2D, elementTexture[m_Board[i][j] - 1]);
+				glBindVertexArray(vao[1]);
+				glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			}
 		}
+
 		glfwPollEvents();
 
-		// std::cout << m_CurrentState << std::endl;
 		if (glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_LEFT)) {
 			LogBoard();
 			glfwGetCursorPos(m_Window, &xPos, &yPos);
 			UpdateGameState(xPos, yPos);
 			if (m_CurrentState == GAME_OVER) {
-				std::cout << "Player" << m_Player1Turn << " won" << std::endl;
+				std::cout << "Player" << m_Player1Turn + 1 << " won" << std::endl;
 			}
 		}
 
@@ -239,45 +262,42 @@ void Game::UpdateGameState(u32 x, u32 y)
 		LogBoard();
 	}
 
-	IsOver();
+	if (IsOver()) {
+		m_CurrentState = GAME_OVER;
+	}
 }
 
 bool Game::IsOver()
 {
+	if (m_CurrentState == GAME_OVER) {
+		return true;
+	}
+
 	u32 sum {};
 
 	for (u32 i = 0; i < 3; ++i) {
-		for (u32 j = 0; j < 3; ++j) {
-			sum += m_Board[i][j] + m_Board[i][j + 1] + m_Board[i][j + 2];
+		sum += m_Board[i][0] + m_Board[i][1] + m_Board[i][2];
 
-			if (m_Board[i][j] == 0 or m_Board[j][i] == 0) {
-				continue;
-			}
+		if (m_Board[i][0] == 0 or m_Board[0][i] == 0) {
+			continue;
+		}
 
-			if (m_Board[i][j] == m_Board[i][j + 1] and m_Board[i][j] == m_Board[i][j + 2]) {
-				std::cout << i << j << '\n';
-				m_CurrentState = GAME_OVER;
-				return true;
-			}
-			if (m_Board[j][i] == m_Board[j + 1][i] and m_Board[i][j] == m_Board[j + 2][i]) {
-				std::cout << j << i << '\n';
-				m_CurrentState = GAME_OVER;
-				return true;
-			}
+		if (m_Board[i][0] == m_Board[i][1] and m_Board[i][0] == m_Board[i][2]) {
+			return true;
+		}
+		if (m_Board[0][i] == m_Board[1][i] and m_Board[0][i] == m_Board[2][i]) {
+			return true;
 		}
 	}
 
 	if (sum == 13) {
-		m_CurrentState = GAME_OVER;
 		return true;
 	}
 
 	if (m_Board[0][0] != 0 and m_Board[0][0] == m_Board[1][1] and m_Board[0][0] == m_Board[2][2]) {
-		m_CurrentState = GAME_OVER;
 		return true;
 	}
 	if (m_Board[2][0] != 0 and m_Board[2][0] == m_Board[1][1] and m_Board[2][0] == m_Board[0][2]) {
-		m_CurrentState = GAME_OVER;
 		return true;
 	}
 
