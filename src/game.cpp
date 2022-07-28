@@ -4,6 +4,8 @@
 
 #include <iostream>
 #include <cmath>
+#include <limits>
+#include <utility>
 
 #include "game.h"
 #include "shader.h"
@@ -17,8 +19,10 @@ static void ProcessInput(GLFWwindow* window);
 
 Game::Game() :
 	m_Board {},
+	m_Winner {},
 	m_Window { nullptr },
 	m_CurrentState { GAME_INPROGRESS },
+	m_GameMode { SINGLE_P },
 	m_Player1Turn { true }
 {
 	glfwInit();
@@ -87,9 +91,9 @@ int Game::Init()
 		0, 1, 3,
 		1, 2, 3
 	};
+
 	unsigned int vao[2] {};
 	glGenVertexArrays(2, vao);
-	glBindVertexArray(vao[1]);
 
 	unsigned int vbo[2] {};
 	glGenBuffers(2, vbo);
@@ -152,11 +156,7 @@ int Game::Init()
 	glBindTexture(GL_TEXTURE_2D, elementTexture[1]);
 
 	unsigned char* oData =
-		stbi_load(
-			"../src/assets/o.png",
-			&texWidth, &texHeight,
-			&nrChannels,
-			0);
+		stbi_load("../src/assets/o.png", &texWidth, &texHeight, &nrChannels, 0);
 
 	if (oData) {
 		glTexImage2D(
@@ -244,12 +244,17 @@ int Game::Init()
 		if (glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_LEFT)) {
 			glfwGetCursorPos(m_Window, &xPos, &yPos);
 			UpdateGameState(xPos, yPos);
-			if (m_CurrentState == GAME_OVER and IsOver()) {
-				std::cout << "Player " << m_Player1Turn + 1 << " won"
-						  << std::endl;
-			}
-			else {
-				std::cout << "Tie" << std::endl;
+
+			if (m_CurrentState == GAME_OVER) {
+				if (m_Winner == 1) {
+					std::cout << "Player 1 won!" << std::endl;
+				}
+				else if (m_Winner == -1) {
+					std::cout << "Player 2 won!" << std::endl;
+				}
+				else {
+					std::cout << "Draw!" << std::endl;
+				}
 			}
 		}
 
@@ -261,6 +266,10 @@ int Game::Init()
 
 void Game::UpdateGameState(u32 x, u32 y)
 {
+	if (m_CurrentState == GAME_OVER) {
+		return;
+	}
+
 	static u32 moves {};
 	x /= 300;
 	y /= 300;
@@ -278,17 +287,17 @@ void Game::UpdateGameState(u32 x, u32 y)
 	}
 
 	if (m_CurrentState != GAME_OVER) {
-		if (IsOver()) {
+		if (m_Winner = CheckWinner(); m_Winner) {
 			m_CurrentState = GAME_OVER;
 		}
-		if (moves == 9) {
+		else if (moves == 9) {
 			std::cout << "Tie";
 			m_CurrentState = GAME_OVER;
 		}
 	}
 }
 
-bool Game::IsOver()
+Utility Game::CheckWinner()
 {
 	for (u32 i = 0; i < 3; ++i) {
 		if (m_Board[i][0] == 0 or m_Board[0][i] == 0) {
@@ -296,23 +305,52 @@ bool Game::IsOver()
 		}
 
 		if (m_Board[i][0] == m_Board[i][1] and m_Board[i][0] == m_Board[i][2]) {
-			return true;
+			return m_Board[i][0] == 1 ? Utility::X : Utility::O;
 		}
 		if (m_Board[0][i] == m_Board[1][i] and m_Board[0][i] == m_Board[2][i]) {
-			return true;
+			return m_Board[0][i] == 1 ? Utility::X : Utility::O;
 		}
 	}
 
 	if (m_Board[0][0] != 0 and m_Board[0][0] == m_Board[1][1] and
 		m_Board[0][0] == m_Board[2][2]) {
-		return true;
+		return m_Board[0][0] == 1 ? Utility::X : Utility::O;
 	}
 	if (m_Board[2][0] != 0 and m_Board[2][0] == m_Board[1][1] and
 		m_Board[2][0] == m_Board[0][2]) {
-		return true;
+		return m_Board[2][0] == 1 ? Utility::X : Utility::O;
 	}
 
-	return false;
+	return Utility::T;
+}
+
+void Game::MakeMove()
+{
+	i32 bestUtilVal = std::numeric_limits<i32>::min();
+	std::pair<i32, i32> currentMove {};
+
+	for (i32 i = 0; i < 3; ++i) {
+		for (i32 j = 0; j < 3; ++j) {
+			if (m_Board[i][j] == 0) {
+				m_Board[i][j] = 1;
+				const auto utilVal = Minimax(m_Board, 0, false);
+				m_Board[i][j] = 0;
+
+				bestUtilVal = std::max(utilVal, bestUtilVal);
+				currentMove.first = i;
+				currentMove.second = j;
+			}
+		}
+	}
+
+	m_Board[currentMove.first][currentMove.second] = 1;
+}
+
+i32 Game::Minimax(i32 board[3][3], u32 depth, bool isMax)
+{
+	if (CheckWinner() == Utility::T) {
+		
+	}
 }
 
 static void ProcessInput(GLFWwindow* window)

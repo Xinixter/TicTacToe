@@ -5,8 +5,7 @@
 #include <cstdint>
 #include <limits>
 
-using i8  = std::int8_t;
-using u8  = std::uint8_t;
+
 using i32 = std::int32_t;
 using u32 = std::uint32_t;
 using i64 = std::int64_t;
@@ -20,6 +19,17 @@ enum GameState {
 	GAME_OVER
 };
 
+enum GameMode {
+	SINGLE_P,
+	MULTI_P
+};
+
+enum Utility {
+	O = -1,
+	T,
+	X
+};
+
 class Game {
 public:
 	Game();
@@ -28,17 +38,20 @@ public:
 	int Init();
 
 private:
-	u32 m_Board[3][3];
+	i32         m_Board[3][3];
+	Utility     m_Winner;
 	GLFWwindow* m_Window;
-	GameState m_CurrentState;
-	bool m_Player1Turn {};
+	GameState   m_CurrentState;
+	GameMode    m_GameMode;
+	bool        m_Player1Turn {};
 
-	const u32 m_Width = 900;
-	const u32 m_Height = 900;
+	const u32   m_Width  = 900;
+	const u32   m_Height = 900;
 
-	void UpdateGameState(unsigned int x, unsigned int y);
-	bool IsOver();
-	void LogBoard();
+	void        UpdateGameState(unsigned int x, unsigned int y);
+	Utility     CheckWinner();
+	void        MakeMove();
+	i32         Game::Minimax(i32 board[3][3], u32 depth, bool isMax);
 
 };
 
