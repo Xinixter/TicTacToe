@@ -10,7 +10,8 @@
 
 
 static void CursorPosCallback(GLFWwindow* window, double xPos, double yPos);
-static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+static void
+	MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 static void FrameBufferSizeCallback(GLFWwindow* window, int width, int height);
 static void ProcessInput(GLFWwindow* window);
 
@@ -56,11 +57,12 @@ int Game::Init()
 	glfwSetMouseButtonCallback(m_Window, MouseButtonCallback);
 
 	Shader shader[2] {};
-	shader[0].Load("../src/assets/grid-vshader.vs",
-				   "../src/assets/grid-fshader-1.fs");
+	shader[0].Load(
+		"../src/assets/grid-vshader.vs", "../src/assets/grid-fshader-1.fs");
 
-	shader[1].Load("../src/assets/element-vshader.vs",
-				   "../src/assets/element-fshader-2.fs");
+	shader[1].Load(
+		"../src/assets/element-vshader.vs",
+		"../src/assets/element-fshader-2.fs");
 
 	float board[] = {
 		-(1.0f/3.0f),  1.0f, 0.0f,
@@ -74,11 +76,11 @@ int Game::Init()
 	};
 
 	float xo[] = {
-		// vertices                       // colors         // texture coords
-		 (1.0f/3.0f),  (1.0f/3.0f), 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
-		 (1.0f/3.0f), -(1.0f/3.0f), 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
-		-(1.0f/3.0f), -(1.0f/3.0f), 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-		-(1.0f/3.0f),  (1.0f/3.0f), 1.0f, 0.0f, 1.0f, 0.0f, 1.0f  // top left
+		// vertices                     // colors         // texture coords
+		 (1.0f / 3.0f),  (1.0f / 3.0f), 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
+		 (1.0f / 3.0f), -(1.0f / 3.0f), 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
+		-(1.0f / 3.0f), -(1.0f / 3.0f), 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
+		-(1.0f / 3.0f),  (1.0f / 3.0f), 1.0f, 0.0f, 1.0f, 0.0f, 1.0f  // top left
 	};
 
 	unsigned int indices[] = {
@@ -106,7 +108,8 @@ int Game::Init()
 	unsigned int ebo {};
 	glGenBuffers(1, &ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glBufferData(
+		GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	unsigned int elementTexture[2];
 	glGenTextures(2, elementTexture);
@@ -114,7 +117,8 @@ int Game::Init()
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(
+		GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	int texWidth {};
@@ -148,8 +152,12 @@ int Game::Init()
 	glBindTexture(GL_TEXTURE_2D, elementTexture[1]);
 
 	unsigned char* oData =
-		stbi_load("../src/assets/o.png", &texWidth, &texHeight, &nrChannels, 0);
-	
+		stbi_load(
+			"../src/assets/o.png",
+			&texWidth, &texHeight,
+			&nrChannels,
+			0);
+
 	if (oData) {
 		glTexImage2D(
 			GL_TEXTURE_2D,
@@ -160,8 +168,7 @@ int Game::Init()
 			0,
 			GL_RGBA,
 			GL_UNSIGNED_BYTE,
-			oData
-		);
+			oData);
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	else {
@@ -219,8 +226,12 @@ int Game::Init()
 					continue;
 				}
 
-				glUniform1f(glGetUniformLocation(shader[1].m_SID, "deltaX"), static_cast<float>(j));
-				glUniform1f(glGetUniformLocation(shader[1].m_SID, "deltaY"), static_cast<float>(i));
+				glUniform1f(
+					glGetUniformLocation(shader[1].m_SID, "deltaX"),
+					static_cast<float>(j));
+				glUniform1f(
+					glGetUniformLocation(shader[1].m_SID, "deltaY"),
+					static_cast<float>(i));
 
 				glBindTexture(GL_TEXTURE_2D, elementTexture[m_Board[i][j] - 1]);
 				glBindVertexArray(vao[1]);
@@ -231,11 +242,14 @@ int Game::Init()
 		glfwPollEvents();
 
 		if (glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_LEFT)) {
-			LogBoard();
 			glfwGetCursorPos(m_Window, &xPos, &yPos);
 			UpdateGameState(xPos, yPos);
-			if (m_CurrentState == GAME_OVER) {
-				std::cout << "Player" << m_Player1Turn + 1 << " won" << std::endl;
+			if (m_CurrentState == GAME_OVER and IsOver()) {
+				std::cout << "Player " << m_Player1Turn + 1 << " won"
+						  << std::endl;
+			}
+			else {
+				std::cout << "Tie" << std::endl;
 			}
 		}
 
@@ -247,6 +261,7 @@ int Game::Init()
 
 void Game::UpdateGameState(u32 x, u32 y)
 {
+	static u32 moves {};
 	x /= 300;
 	y /= 300;
 
@@ -259,25 +274,23 @@ void Game::UpdateGameState(u32 x, u32 y)
 			m_Board[y][x] = 2;
 			m_Player1Turn = true;
 		}
-		LogBoard();
+		++moves;
 	}
 
-	if (IsOver()) {
-		m_CurrentState = GAME_OVER;
+	if (m_CurrentState != GAME_OVER) {
+		if (IsOver()) {
+			m_CurrentState = GAME_OVER;
+		}
+		if (moves == 9) {
+			std::cout << "Tie";
+			m_CurrentState = GAME_OVER;
+		}
 	}
 }
 
 bool Game::IsOver()
 {
-	if (m_CurrentState == GAME_OVER) {
-		return true;
-	}
-
-	u32 sum {};
-
 	for (u32 i = 0; i < 3; ++i) {
-		sum += m_Board[i][0] + m_Board[i][1] + m_Board[i][2];
-
 		if (m_Board[i][0] == 0 or m_Board[0][i] == 0) {
 			continue;
 		}
@@ -290,28 +303,16 @@ bool Game::IsOver()
 		}
 	}
 
-	if (sum == 13) {
+	if (m_Board[0][0] != 0 and m_Board[0][0] == m_Board[1][1] and
+		m_Board[0][0] == m_Board[2][2]) {
 		return true;
 	}
-
-	if (m_Board[0][0] != 0 and m_Board[0][0] == m_Board[1][1] and m_Board[0][0] == m_Board[2][2]) {
-		return true;
-	}
-	if (m_Board[2][0] != 0 and m_Board[2][0] == m_Board[1][1] and m_Board[2][0] == m_Board[0][2]) {
+	if (m_Board[2][0] != 0 and m_Board[2][0] == m_Board[1][1] and
+		m_Board[2][0] == m_Board[0][2]) {
 		return true;
 	}
 
 	return false;
-}
-
-void Game::LogBoard()
-{
-	for (u32 i = 0; i < 3; ++i) {
-		for (u32 j = 0; j < 3; ++j) {
-			std::cout << m_Board[i][j];
-		}
-		std::cout << std::endl;
-	}
 }
 
 static void ProcessInput(GLFWwindow* window)
@@ -329,7 +330,8 @@ static void FrameBufferSizeCallback(
 	glViewport(0, 0, width, height);
 }
 
-static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+static void
+	MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
 
 	if (double xPos {}, yPos {};
