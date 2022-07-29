@@ -242,7 +242,6 @@ int Game::Init()
 
 		if (m_CurrentState != GAME_OVER and m_GameMode == SINGLE_P and m_Player1Turn) {
 			MakeMove();
-			++m_Moves;
 			m_Player1Turn = false;
 		}
 
@@ -262,10 +261,9 @@ int Game::Init()
 				else {
 					std::cout << "Draw!" << std::endl;
 				}
-				LogBoard();
+				// LogBoard();
 			}
 		}
-		std::cout << m_CurrentState << std::endl;
 
 		glfwSwapBuffers(m_Window);
 	}
@@ -291,8 +289,8 @@ void Game::UpdateBoard(u32 x, u32 y)
 			m_Board[y][x] = 2;
 			m_Player1Turn = true;
 		}
+		++m_Moves;
 	}
-	++m_Moves;
 
 	UpdateGameState();
 }
@@ -307,6 +305,7 @@ void Game::UpdateGameState()
 		m_CurrentState = GAME_OVER;
 	}
 	else if (m_Moves == 9) {
+		std::cout << m_Moves << '\n';
 		m_CurrentState = GAME_OVER;
 	}
 }
@@ -350,14 +349,17 @@ void Game::MakeMove()
 				const auto utilVal = Minimax(m_Board, 0, false);
 				m_Board[i][j] = 0;
 
-				bestUtilVal = std::max(utilVal, bestUtilVal);
-				currentMove.first = i;
-				currentMove.second = j;
+				if (utilVal > bestUtilVal) {
+					bestUtilVal = utilVal;
+					currentMove.first = i;
+					currentMove.second = j;
+				}
 			}
 		}
 	}
 
 	m_Board[currentMove.first][currentMove.second] = 1;
+	++m_Moves;
 }
 
 i32 Game::Minimax(i32 board[3][3], const u32& depth, const bool& isMax)
