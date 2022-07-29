@@ -39,6 +39,7 @@ public:
 
 private:
 	i32         m_Board[3][3];
+	u32         m_Moves;
 	Utility     m_Winner;
 	GLFWwindow* m_Window;
 	GameState   m_CurrentState;
@@ -48,11 +49,13 @@ private:
 	const u32   m_Width  = 900;
 	const u32   m_Height = 900;
 
-	void        UpdateGameState(unsigned int x, unsigned int y);
+	void        UpdateBoard(u32 x, u32 y);
+	void        UpdateGameState();
 	Utility     CheckWinner();
 	void        MakeMove();
-	i32         Game::Minimax(i32 board[3][3], u32 depth, bool isMax);
+	i32         Minimax(i32 board[3][3], const u32& depth, const  bool& isMax);
 
+	void LogBoard();
 };
 
 #endif

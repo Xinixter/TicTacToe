@@ -20,6 +20,7 @@ static void ProcessInput(GLFWwindow* window);
 Game::Game() :
 	m_Board {},
 	m_Winner {},
+	m_Moves {},
 	m_Window { nullptr },
 	m_CurrentState { GAME_INPROGRESS },
 	m_GameMode { SINGLE_P },
@@ -239,11 +240,17 @@ int Game::Init()
 			}
 		}
 
+		if (m_CurrentState != GAME_OVER and m_GameMode == SINGLE_P and m_Player1Turn) {
+			MakeMove();
+			++m_Moves;
+			m_Player1Turn = false;
+		}
+
 		glfwPollEvents();
 
 		if (glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_LEFT)) {
 			glfwGetCursorPos(m_Window, &xPos, &yPos);
-			UpdateGameState(xPos, yPos);
+			UpdateBoard(xPos, yPos);
 
 			if (m_CurrentState == GAME_OVER) {
 				if (m_Winner == 1) {
@@ -255,8 +262,10 @@ int Game::Init()
 				else {
 					std::cout << "Draw!" << std::endl;
 				}
+				LogBoard();
 			}
 		}
+		std::cout << m_CurrentState << std::endl;
 
 		glfwSwapBuffers(m_Window);
 	}
@@ -264,13 +273,12 @@ int Game::Init()
 	return 0;
 }
 
-void Game::UpdateGameState(u32 x, u32 y)
+void Game::UpdateBoard(u32 x, u32 y)
 {
 	if (m_CurrentState == GAME_OVER) {
 		return;
 	}
 
-	static u32 moves {};
 	x /= 300;
 	y /= 300;
 
@@ -283,17 +291,23 @@ void Game::UpdateGameState(u32 x, u32 y)
 			m_Board[y][x] = 2;
 			m_Player1Turn = true;
 		}
-		++moves;
+	}
+	++m_Moves;
+
+	UpdateGameState();
+}
+
+void Game::UpdateGameState()
+{
+	if (m_CurrentState == GAME_OVER) {
+		return;
 	}
 
-	if (m_CurrentState != GAME_OVER) {
-		if (m_Winner = CheckWinner(); m_Winner) {
-			m_CurrentState = GAME_OVER;
-		}
-		else if (moves == 9) {
-			std::cout << "Tie";
-			m_CurrentState = GAME_OVER;
-		}
+	if (m_Winner = CheckWinner(); m_Winner != Utility::T) {
+		m_CurrentState = GAME_OVER;
+	}
+	else if (m_Moves == 9) {
+		m_CurrentState = GAME_OVER;
 	}
 }
 
@@ -346,10 +360,50 @@ void Game::MakeMove()
 	m_Board[currentMove.first][currentMove.second] = 1;
 }
 
-i32 Game::Minimax(i32 board[3][3], u32 depth, bool isMax)
+i32 Game::Minimax(i32 board[3][3], const u32& depth, const bool& isMax)
 {
-	if (CheckWinner() == Utility::T) {
-		
+	if (auto temp = CheckWinner(); temp != Utility::T) {
+		return temp;
+	}
+
+	i32 bestUtilVal {};
+	if (isMax) {
+		bestUtilVal = std::numeric_limits<i32>::min();
+		for (u32 i = 0; i < 3; ++i) {
+			for (u32 j = 0; j < 3; ++j) {
+				if (m_Board[i][j] == 0) {
+					m_Board[i][j] = 1;
+					const auto utilVal = Minimax(m_Board, depth + 1, false);
+					m_Board[i][j] = 0;
+					bestUtilVal = std::max(utilVal, bestUtilVal);
+				}
+			}
+		}
+	}
+	else {
+		bestUtilVal = std::numeric_limits<i32>::max();
+		for (u32 i = 0; i < 3; ++i) {
+			for (u32 j = 0; j < 3; ++j) {
+				if (m_Board[i][j] == 0) {
+					m_Board[i][j] = 2;
+					const auto utilVal = Minimax(m_Board, depth + 1, true);
+					m_Board[i][j] = 0;
+					bestUtilVal = std::min(utilVal, bestUtilVal);
+				}
+			}
+		}
+	}
+
+	return bestUtilVal;
+}
+
+void Game::LogBoard()
+{
+	for (u32 i = 0; i < 3; ++i) {
+		for (u32 j = 0; j < 3; ++j) {
+			std::cout << m_Board[i][j] << ' ';
+		}
+		std::cout << '\n';
 	}
 }
 
