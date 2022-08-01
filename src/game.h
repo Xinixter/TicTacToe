@@ -54,8 +54,10 @@ private:
 	Utility     CheckWinner();
 	void        MakeMove();
 	i32         Minimax(i32 board[3][3], const u32& depth, const  bool& isMax);
+	void        Reset();
 
 	void LogBoard();
+
 };
 
 #endif

@@ -14,6 +14,7 @@
 static void CursorPosCallback(GLFWwindow* window, double xPos, double yPos);
 static void
 	MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 static void FrameBufferSizeCallback(GLFWwindow* window, int width, int height);
 static void ProcessInput(GLFWwindow* window);
 
@@ -58,8 +59,10 @@ int Game::Init()
 		return -1;
 	}
 
-	glfwSetInputMode(m_Window, GLFW_STICKY_KEYS, 1);
+	glfwSetInputMode(m_Window, GLFW_STICKY_KEYS, GLFW_TRUE);
 	glfwSetMouseButtonCallback(m_Window, MouseButtonCallback);
+	glfwSetKeyCallback(m_Window, KeyCallback);
+	const int& resetCode = glfwGetKeyScancode(GLFW_KEY_SPACE);
 
 	Shader shader[2] {};
 	shader[0].Load(
@@ -242,10 +245,10 @@ int Game::Init()
 
 		if (m_CurrentState != GAME_OVER and m_GameMode == SINGLE_P and m_Player1Turn) {
 			MakeMove();
-			m_Player1Turn = false;
+			m_Player1Turn = !m_Player1Turn;
 		}
 
-		glfwPollEvents();
+		glfwWaitEvents();
 
 		if (glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_LEFT)) {
 			glfwGetCursorPos(m_Window, &xPos, &yPos);
@@ -263,6 +266,10 @@ int Game::Init()
 				}
 				// LogBoard();
 			}
+		}
+
+		if (glfwGetKey(m_Window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+			Reset();
 		}
 
 		glfwSwapBuffers(m_Window);
@@ -283,11 +290,11 @@ void Game::UpdateBoard(u32 x, u32 y)
 	if (m_Board[y][x] == 0) {
 		if (m_Player1Turn) {
 			m_Board[y][x] = 1;
-			m_Player1Turn = false;
+			m_Player1Turn = !m_Player1Turn;
 		}
 		else {
 			m_Board[y][x] = 2;
-			m_Player1Turn = true;
+			m_Player1Turn = !m_Player1Turn;
 		}
 		++m_Moves;
 	}
@@ -362,6 +369,21 @@ void Game::MakeMove()
 	++m_Moves;
 }
 
+void Game::Reset()
+{
+	for (u32 i = 0; i < 3; ++i) {
+		for (u32 j = 0; j < 3; ++j) {
+			m_Board[i][j] = 0;
+		}
+	}
+
+	m_Winner = Utility::T;
+	m_Moves = 0;
+	m_CurrentState = GAME_INPROGRESS;
+	m_GameMode = SINGLE_P;
+	m_Player1Turn = true;
+}
+
 i32 Game::Minimax(i32 board[3][3], const u32& depth, const bool& isMax)
 {
 	if (auto temp = CheckWinner(); temp != Utility::T) {
@@ -427,11 +449,17 @@ static void FrameBufferSizeCallback(
 static void
 	MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
-
 	if (double xPos {}, yPos {};
 		button == GLFW_MOUSE_BUTTON_LEFT and action == GLFW_PRESS) {
 		glfwGetCursorPos(window, &xPos, &yPos);
 		std::cout << "Left mouse button at " << xPos << ',' << yPos
 				  << std::endl;
+	}
+}
+
+void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_SPACE and action == GLFW_PRESS) {
+		std::cout << "Reset!";
 	}
 }
