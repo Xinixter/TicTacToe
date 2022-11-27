@@ -66,11 +66,11 @@ int Game::Init()
 
 	Shader shader[2] {};
 	shader[0].Load(
-		"../src/assets/grid-vshader.vs", "../src/assets/grid-fshader-1.fs");
+		"../../src/assets/grid-vshader.vs", "../../src/assets/grid-fshader-1.fs");
 
 	shader[1].Load(
-		"../src/assets/element-vshader.vs",
-		"../src/assets/element-fshader-2.fs");
+		"../../src/assets/element-vshader.vs",
+		"../../src/assets/element-fshader-2.fs");
 
 	float board[] = {
 		-(1.0f/3.0f),  1.0f, 0.0f,
@@ -84,7 +84,7 @@ int Game::Init()
 	};
 
 	float xo[] = {
-		// vertices                     // colors         // texture coords
+		 // vertices                    // colors         // texture coords
 		 (1.0f / 3.0f),  (1.0f / 3.0f), 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
 		 (1.0f / 3.0f), -(1.0f / 3.0f), 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
 		-(1.0f / 3.0f), -(1.0f / 3.0f), 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
@@ -136,7 +136,7 @@ int Game::Init()
 	stbi_set_flip_vertically_on_load(true);
 
 	unsigned char* xData =
-		stbi_load("../src/assets/x.png", &texWidth, &texHeight, &nrChannels, 0);
+		stbi_load("../../src/assets/x.png", &texWidth, &texHeight, &nrChannels, 0);
 
 	if (xData) {
 		glTexImage2D(
@@ -160,7 +160,7 @@ int Game::Init()
 	glBindTexture(GL_TEXTURE_2D, elementTexture[1]);
 
 	unsigned char* oData =
-		stbi_load("../src/assets/o.png", &texWidth, &texHeight, &nrChannels, 0);
+		stbi_load("../../src/assets/o.png", &texWidth, &texHeight, &nrChannels, 0);
 
 	if (oData) {
 		glTexImage2D(
